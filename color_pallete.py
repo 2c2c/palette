@@ -198,7 +198,7 @@ def collage(filename, start, stop):
     merged = np.concatenate((img, merged), axis=0)
 
     name, extension = filename.split(".")
-    cv2.imwrite(f"{name}_collage.{extension}", merged)
+    cv2.imwrite(f"./output/{name}_collage.{extension}", merged)
 
 def write_single(filename):
     img = cv2.imread(filename)
@@ -207,6 +207,6 @@ def write_single(filename):
     q = append_pallete(q, c)
 
     name, extension = filename.split(".")
-    cv2.imwrite(f"{name}_pallete.{extension}", q)
+    cv2.imwrite(f"./output/{name}_pallete.{extension}", q)
 
 collage(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
