@@ -126,10 +126,11 @@ def quantize(img, label, center):
 
     return display_img
 
+
 def lab2bgr(colors):
     """ hacky method of using opencv to take a list of colors from lab to bgr"""
 
-    colors = np.float32([np.float32([c,c,c]) for c in colors])
+    colors = np.float32([np.float32([c, c, c]) for c in colors])
     colors = cv2.cvtColor(colors, cv2.COLOR_LAB2BGR)
     colors = colors * 255
     colors = np.uint8(colors)
@@ -138,6 +139,7 @@ def lab2bgr(colors):
 
     return colors
 
+
 def append_pallete(img, center):
     # LAB white -> 255 128 128 on uint8
     # LAB white -> 100 0 0 on float32
@@ -145,11 +147,11 @@ def append_pallete(img, center):
         img,
         100,
         0,
-        1,
-        1,
+        0,
+        0,
         borderType=cv2.BORDER_CONSTANT,
         value=(255, 255, 255, 1))
-    
+
     center = lab2bgr(center)
 
     for i, color in enumerate(center.tolist()):
@@ -157,12 +159,11 @@ def append_pallete(img, center):
         b, g, r = color
         color = (b, g, r)
 
-        OFFSET_X = 20
+        max_width = display_img.shape[1]
+        OFFSET_X = max_width // len(center)
         OFFSET_Y = 50
-        max_x = OFFSET_X * len(center) - 1
-        size = display_img.shape[1]
 
-        start_x = ((size - max_x) // 2) + i * OFFSET_X
+        start_x = OFFSET_X * i
         start_y = 25
         cv2.rectangle(
             display_img, (start_x, start_y), (start_x + OFFSET_X - 1,
@@ -173,24 +174,40 @@ def append_pallete(img, center):
     return display_img
 
 
-img = cv2.imread("china.png")
-num_quants = 5
-q_imgs = []
-for i in range(4, 4 + num_quants):
-    l, c = make_pallete(img, i)
+def collage(filename, num):
+    img = cv2.imread(filename)
+    num_quants = 4
+    q_imgs = []
+    for i in range(4, 4 + num_quants):
+        l, c = make_pallete(img, i)
+        q = quantize(img, l, c)
+        q = cv2.resize(
+            q,
+            None,
+            fx=1 / num_quants,
+            fy=1 / num_quants,
+            interpolation=cv2.INTER_CUBIC)
+        q = append_pallete(q, c)
+        q_imgs.append(q)
+
+    q_imgs = tuple(q_imgs)
+
+    merged = np.concatenate(q_imgs, axis=1)
+    merged = cv2.resize(
+        merged, (img.shape[1], merged.shape[0]), interpolation=cv2.INTER_CUBIC)
+    merged = np.concatenate((img, merged), axis=0)
+
+    cv2.imshow('display_img', merged)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def write_single(filename):
+    img = cv2.imread(filename)
+    l, c = make_pallete(img, 6)
     q = quantize(img, l, c)
-    q = cv2.resize(q, None, fx=1/num_quants, fy=1/num_quants, interpolation=cv2.INTER_CUBIC)
     q = append_pallete(q, c)
-    q_imgs.append(q)
 
-q_imgs = tuple(q_imgs)
+    name, extension = filename.split(".")
+    cv2.imwrite(f"{name}_pallete.{extension}", q)
 
-merged = np.concatenate(q_imgs, axis=1)
-merged = cv2.resize(merged, (img.shape[1], merged.shape[0]), interpolation=cv2.INTER_CUBIC)
-merged = np.concatenate((img, merged), axis=0)
-
-
-
-cv2.imshow('display_img', merged)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+write_single(sys.argv[1])
