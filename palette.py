@@ -67,6 +67,9 @@ def distance(center, img_point, dist_type=Dist.MANHATTAN):
 
 
 def k_means(img, k, iterations):
+    """
+    using opencv implementation instead this handwritten one since it's better in every way
+    """
     img = img.tolist()
 
     centers = [(random.randint(0, len(img)), random.randint(0, len(img[0])))
@@ -108,9 +111,9 @@ def make_palette(img, K):
     #flatten for kmeans
     Z = Z.reshape((-1, 3))
     # define criteria, number of clusters(K) and apply kmeans()
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 50, .0001)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1)
 
-    ret, label, center = cv2.kmeans(Z, K, None, criteria, 30,
+    ret, label, center = cv2.kmeans(Z, K, None, criteria, 10,
                                     cv2.KMEANS_RANDOM_CENTERS)
 
     return label, center
@@ -129,7 +132,7 @@ def quantize(img, label, center):
 
 
 def lab2bgr(colors):
-    """ hacky method of using opencv to take a list of colors from lab to bgr"""
+    """ hacky color conversion """
 
     colors = np.float32([np.float32([c, c, c]) for c in colors])
     colors = cv2.cvtColor(colors, cv2.COLOR_LAB2BGR)
@@ -174,9 +177,10 @@ def append_palette(img, center):
 
     return display_img
 
+
 def collage(filename, start, stop):
     img = cv2.imread(filename)
-    num_quants = stop - start + 1 
+    num_quants = stop - start + 1
     q_imgs = []
     for i in range(start, stop + 1):
         l, c = make_palette(img, i)
@@ -200,7 +204,7 @@ def collage(filename, start, stop):
     name, extension = filename.split(".")
     name = name.split("\\")[-1]
 
-    cv2.imwrite(f"output/{name}_palette.{extension}", q)
+    cv2.imwrite(f"output/{name}_palette.{extension}", merged)
 
 
 collage(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
