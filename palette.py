@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import random
 import sys
+import os
 import copy
 import timeit
 import math
@@ -97,7 +98,7 @@ def k_means(img, k, iterations):
     return centers
 
 
-def make_pallete(img, K):
+def make_palette(img, K):
     # we convert from rgb -> lab colorspace. it performs better in quantification
     # need to map rgb 0-255 to 0-1 before converting
     # to display image do the reverse
@@ -116,7 +117,7 @@ def make_pallete(img, K):
 
 
 def quantize(img, label, center):
-    # redraw the image with pallete you made:
+    # redraw the image with palette you made:
     res = center[label.flatten()]
     display_img = res.reshape((img.shape))
 
@@ -140,7 +141,7 @@ def lab2bgr(colors):
     return colors
 
 
-def append_pallete(img, center):
+def append_palette(img, center):
     # LAB white -> 255 128 128 on uint8
     # LAB white -> 100 0 0 on float32
     display_img = cv2.copyMakeBorder(
@@ -173,13 +174,12 @@ def append_pallete(img, center):
 
     return display_img
 
-
 def collage(filename, start, stop):
     img = cv2.imread(filename)
     num_quants = stop - start + 1 
     q_imgs = []
     for i in range(start, stop + 1):
-        l, c = make_pallete(img, i)
+        l, c = make_palette(img, i)
         q = quantize(img, l, c)
         q = cv2.resize(
             q,
@@ -187,7 +187,7 @@ def collage(filename, start, stop):
             fx=1 / num_quants,
             fy=1 / num_quants,
             interpolation=cv2.INTER_CUBIC)
-        q = append_pallete(q, c)
+        q = append_palette(q, c)
         q_imgs.append(q)
 
     q_imgs = tuple(q_imgs)
@@ -198,15 +198,9 @@ def collage(filename, start, stop):
     merged = np.concatenate((img, merged), axis=0)
 
     name, extension = filename.split(".")
-    cv2.imwrite(f"./output/{name}_collage.{extension}", merged)
+    name = name.split("\\")[-1]
 
-def write_single(filename):
-    img = cv2.imread(filename)
-    l, c = make_pallete(img, 6)
-    q = quantize(img, l, c)
-    q = append_pallete(q, c)
+    cv2.imwrite(f"output/{name}_palette.{extension}", q)
 
-    name, extension = filename.split(".")
-    cv2.imwrite(f"./output/{name}_pallete.{extension}", q)
 
 collage(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
