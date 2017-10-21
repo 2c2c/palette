@@ -163,7 +163,7 @@ def append_pallete(img, center):
         OFFSET_X = max_width // len(center)
         OFFSET_Y = 50
 
-        start_x = OFFSET_X * i
+        start_x = OFFSET_X * i + 1
         start_y = 25
         cv2.rectangle(
             display_img, (start_x, start_y), (start_x + OFFSET_X - 1,
@@ -174,11 +174,11 @@ def append_pallete(img, center):
     return display_img
 
 
-def collage(filename, num):
+def collage(filename, start, stop):
     img = cv2.imread(filename)
-    num_quants = 4
+    num_quants = stop - start + 1 
     q_imgs = []
-    for i in range(4, 4 + num_quants):
+    for i in range(start, stop + 1):
         l, c = make_pallete(img, i)
         q = quantize(img, l, c)
         q = cv2.resize(
@@ -197,9 +197,8 @@ def collage(filename, num):
         merged, (img.shape[1], merged.shape[0]), interpolation=cv2.INTER_CUBIC)
     merged = np.concatenate((img, merged), axis=0)
 
-    cv2.imshow('display_img', merged)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    name, extension = filename.split(".")
+    cv2.imwrite(f"{name}_collage.{extension}", merged)
 
 def write_single(filename):
     img = cv2.imread(filename)
@@ -210,4 +209,4 @@ def write_single(filename):
     name, extension = filename.split(".")
     cv2.imwrite(f"{name}_pallete.{extension}", q)
 
-write_single(sys.argv[1])
+collage(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
